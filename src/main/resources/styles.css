@@ -1,0 +1,74 @@
+.table-view {
+    -fx-background-color: white;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
+    -fx-background-radius: 12 12 0 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-padding: 12;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+}
+/* ==================================== */
+/* 1. Vzhriadkov (TableRow) */
+/* ==================================== */
+
+/* Nastavenie zfarby vriadkov a veak ju ne nastavujete v Jave */
+.table-row-cell {
+    /* Poufarbu pozadia (biela), ktorsi mal v 'else' bloku */
+    -fx-background-color: white;
+
+    /* Ak by ste chceli vebunky nastavitu namiesto v Jave: */
+    /* -fx-cell-size: 45px; */
+}
+
+/* ==================================== */
+/* 2. Zebra Pruhy (Striedanie farieb) */
+/* ==================================== */
+
+/* Pre nepriadky (:odd) aplikujeme svetlomodrfarbu */
+.table-row-cell:odd {
+    /* Toto zodpovedtvojmu "-fx-background-color: #f8fbff;" */
+    -fx-background-color: #f8fbff;
+}
+
+/* Pre priadky (:even) zostbiela (udefinovanv .table-row-cell) */
+
+
+/* ==================================== */
+/* 3. Hover Efekt */
+/* ==================================== */
+
+/* Pri prejdenmyna akriadok (vrpr*/
+.table-row-cell:hover {
+    /* Toto zodpovedtvojmu "-fx-background-color: #dbeafe;" */
+    -fx-background-color: #dbeafe;
+}
+
+/* ==================================== */
+/* 4. Oprava: Zabezpehover neprepisuje zebra pruhy */
+/* ==================================== */
+/* Kehover prepvostatnstavy, to je spr*/
+/* Toto zabezpeaj vybranriadok bude pri hoveri modr*/
+
+/* Definuje farbu pre vybranriadok */
+.table-row-cell:selected {
+    /* Nastavte pevnfarbu pozadia (napr. svetlomodr*/
+    -fx-background-color: #93c5fd;
+
+    /* DAk pouaj zebra pruhy, musznova definovaaj text */
+    -fx-text-fill: black; /* Aby bol text */
+}
+
+/* Tip: Ak chcete, aby bol vybranriadok modrale text v biely: */
+.table-row-cell:selected .text {
+    -fx-fill: white;
+}
