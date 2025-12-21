@@ -143,7 +143,8 @@ public class LoginApp extends Application {
         lblZabudnute.setOnMouseExited(e -> lblZabudnute.setUnderline(false));
         lblZabudnute.setOnMouseClicked(e -> this.otvorZabudnuteHeslo(stage));
 
-        Button btnSubmit = this.createModernButton("Prihlásiť sa", "#27ae60");
+        Button btnSubmit = this.createModernButton("Prihlásiť sa", "#3498db");
+        btnSubmit.setDefaultButton(true);
         btnSubmit.setOnAction((e) -> {
             // 1. Zavoláme metódu, ktorá vráti [ID, Meno, Rola]
             String[] udaje = this.db.overPouzivatela(txtUser.getText(), txtPass.getText());

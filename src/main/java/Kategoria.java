@@ -1,31 +1,49 @@
-/*    */
-
-/*    */
-/*    */ public class Kategoria {
-/*    */   private final int id;
-/*    */   
-/*    */   private final String nazov;
-/*    */   
-/*    */   public Kategoria(int id, String nazov) {
-/*  8 */     this.id = id;
-/*  9 */     this.nazov = nazov;
-/*    */   }
-/*    */   
-/*    */   public int getId() {
-/* 12 */     return this.id;
-/*    */   }
-/*    */   
-/*    */   public String getNazov() {
-/* 13 */     return this.nazov;
-/*    */   }
-/*    */   
-/*    */   public String toString() {
-/* 17 */     return this.nazov;
-/*    */   }
-/*    */ }
-
-
-/* Location:              E:\Receptar\receptar.jar!\receptar\Kategoria.class
- * Java compiler version: 17 (61.0)
- * JD-Core Version:       1.1.3
+/**
+ * Modelová trieda reprezentujúca kategóriu receptov.
+ * Slúži na klasifikáciu receptov do skupín pre lepšiu prehľadnosť v systéme.
  */
+public class Kategoria {
+
+    /** Unikátny identifikátor kategórie v databáze */
+    private final int id;
+
+    /** Názov kategórie */
+    private final String nazov;
+
+    /**
+     * Konštruktor pre vytvorenie novej inštancie kategórie.
+     * * @param id    Jedinečné ID kategórie
+     * @param nazov Slovný názov kategórie
+     */
+    public Kategoria(int id, String nazov) {
+        this.id = id;
+        this.nazov = nazov;
+    }
+
+    /**
+     * Získa identifikátor kategórie.
+     * * @return Celé číslo (ID)
+     */
+    public int getId() {
+        return this.id;
+    }
+
+    /**
+     * Získa názov kategórie.
+     * * @return String s názvom kategórie
+     */
+    public String getNazov() {
+        return this.nazov;
+    }
+
+    /**
+     * Prekrytá metóda toString, ktorá vracia názov kategórie.
+     * Táto implementácia umožňuje priame zobrazenie názvu v komponentoch
+     * ako ComboBox alebo ListView bez nutnosti definovať vlastný CellFactory.
+     * * @return Názov kategórie
+     */
+    @Override
+    public String toString() {
+        return this.nazov;
+    }
+}

@@ -45,7 +45,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
 import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
@@ -80,10 +82,12 @@ public class ReceptyFXApp extends Application {
     private static final String FTP_PASSWORD = "ILoveHugs321";
     private static final String FTP_BASE_DIR = "/public_html/ReceptyApp";
     private static final String PUBLIC_BASE_URL = "https://cambalik.eu/ReceptyApp";
+
     public static void startWithUser(Stage stage, String username) {
         loggedInUser = username;
         (new ReceptyFXApp()).start(stage);
     }
+
     private String adjustColor(String hex, int amount) {
         if (hex.length() == 7 && hex.startsWith("#")) {
             int r = Integer.parseInt(hex.substring(1, 3), 16);
@@ -97,6 +101,7 @@ public class ReceptyFXApp extends Application {
             return hex;
         }
     }
+
     private Button createModernButton(String text, String baseColor) {
         Button btn = new Button(text);
         String baseStyle = "-fx-background-color: " + baseColor + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 11 28; -fx-background-radius: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0.3, 0, 4);";
@@ -111,6 +116,7 @@ public class ReceptyFXApp extends Application {
         });
         return btn;
     }
+
     public void start(Stage stage) {
         System.setProperty("javafx.platform", "win");
         System.setProperty("https.protocols", "TLSv1.2,TLSv1.3");
@@ -194,6 +200,7 @@ public class ReceptyFXApp extends Application {
         stage.setMaximized(false);
         stage.show();
     }
+
     private void showPasswordChangeDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Zmeniť heslo");
@@ -249,10 +256,12 @@ public class ReceptyFXApp extends Application {
         });
         dialog.showAndWait();
     }
+
     private void nacitajRecepty() {
         this.recepty.clear();
         this.recepty.addAll(this.db.nacitajVsetkyRecepty());
     }
+
     private VBox createLeftPanel() {
         VBox box = new VBox(10.0);
         box.setPadding(new Insets(18.0));
@@ -283,6 +292,7 @@ public class ReceptyFXApp extends Application {
         box.getChildren().addAll(title, this.lblVybrany, this.lblId, new Label("Názov:"), this.tfNazov, casPorcie, new Label("Kategória:"), this.cbKategoria, new Label("Postup prípravy:"), this.taPostup);
         return box;
     }
+
     private VBox createCenterPanel(Stage stage) {
         VBox box = new VBox(20.0);
         box.setAlignment(Pos.CENTER);
@@ -345,6 +355,7 @@ public class ReceptyFXApp extends Application {
         box.getChildren().addAll(topSection, separator, ingBox);
         return box;
     }
+
     private VBox createRightPanel() {
         VBox box = new VBox(10.0);
         box.setPadding(new Insets(18.0));
@@ -438,6 +449,7 @@ public class ReceptyFXApp extends Application {
 
         return box;
     }
+
     private void updateFilter() {
         this.filteredRecepty.setPredicate(recept -> {
             // 1. Filter podľa kategórie
@@ -483,6 +495,7 @@ public class ReceptyFXApp extends Application {
             return false;
         });
     }
+
     private void zobrazRecept(Recept r) {
         this.lblVybrany.setText("Vybraný recept: " + r.getNazov() + " (autor: " + r.getAutor() + ")");
         this.lblId.setText(String.valueOf(r.getReceptId()));
@@ -503,6 +516,7 @@ public class ReceptyFXApp extends Application {
         this.docasneIngrediencie.clear();
         this.docasneIngrediencie.addAll(this.ingrediencieReceptu);
     }
+
     private void pridajDocasnuIngredienciu() {
         String nazov = this.cbIngrediencia.getEditor().getText().trim();
         String mnoz = this.tfMnozstvo.getText().trim();
@@ -521,6 +535,7 @@ public class ReceptyFXApp extends Application {
             alert("Chyba", "Množstvo musí byť číslo");
         }
     }
+
     private void ulozRecept(boolean novyRecept) {
         if (this.tfNazov.getText().trim().isEmpty()) {
             alert("Chyba", "Zadajte názov receptu!");
@@ -575,6 +590,7 @@ public class ReceptyFXApp extends Application {
             ex.printStackTrace();
         }
     }
+
     private void zmazRecept() {
         if (this.lblId.getText().isEmpty()) {
             return;
@@ -585,6 +601,7 @@ public class ReceptyFXApp extends Application {
         vycistiFormular();
         alert("Úspech", "Recept zmazaný");
     }
+
     private void odstranIngredienciuZReceptu() {
         IngredienciaMnozstvo vybrana = this.tableIngrediencie.getSelectionModel().getSelectedItem();
         if (vybrana != null && !this.lblId.getText().isEmpty()) {
@@ -594,6 +611,7 @@ public class ReceptyFXApp extends Application {
             this.docasneIngrediencie.remove(vybrana);
         }
     }
+
     private void vycistiFormular() {
         this.lblId.setText("");
         this.lblVybrany.setText("Vybraný recept: -");
@@ -607,6 +625,7 @@ public class ReceptyFXApp extends Application {
         this.docasneIngrediencie.clear();
         this.tableRecepty.getSelectionModel().clearSelection();
     }
+
     private void vyberObrazok(Stage stage) {
         if (this.lblId.getText().isEmpty()) {
             alert("Pozor", "Najprv uložte recept (Pridať nový recept), a potom pridajte obrázok");
@@ -634,6 +653,7 @@ public class ReceptyFXApp extends Application {
             }
         })).start();
     }
+
     private String uploadViaFtp(File localFile, String remotePath) {
         FTPClient ftp = new FTPClient();
         String part = null;
@@ -705,15 +725,18 @@ public class ReceptyFXApp extends Application {
                 if (ftp.isConnected()) {
                     ftp.disconnect();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             return null;
         }
     }
+
     private String getFileExtension(File file) {
         String name = file.getName();
         int lastIndex = name.lastIndexOf('.');
         return lastIndex == -1 ? "" : name.substring(lastIndex).toLowerCase();
     }
+
     private void nastavObrazokZUrl(String url) {
         if (url != null && !url.trim().isEmpty()) {
             new Thread(() -> {
@@ -743,6 +766,7 @@ public class ReceptyFXApp extends Application {
             this.imgView.setImage(null);
         }
     }
+
     private void alert(String title, String msg) {
         Alert a = new Alert(AlertType.INFORMATION);
         a.setTitle(title);
@@ -750,6 +774,7 @@ public class ReceptyFXApp extends Application {
         a.setContentText(msg);
         a.showAndWait();
     }
+
     private void nastylujTabulku(TableView<?> table) {
         if (table == null) {
             System.out.println("Tabuľka je null – preskočené štýlovanie");
@@ -759,6 +784,7 @@ public class ReceptyFXApp extends Application {
             table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         }
     }
+
     public static void main(String[] args) {
         launch(args);
     }

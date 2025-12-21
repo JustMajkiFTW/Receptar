@@ -19,9 +19,20 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+/**
+ * Trieda zabezpečujúca export konkrétneho receptu do formátu Microsoft Excel (.xlsx).
+ * Využíva knižnicu Apache POI pre prácu s tabuľkovými dokumentmi.
+ */
 public class ReceptExcelExporter {
+
+    /** Pripojenie k databáze pre načítanie ingrediencií */
     private final DBConnect db = new DBConnect();
 
+    /**
+     * Vygeneruje Excel súbor pre zadaný recept.
+     * Súbor obsahuje základné informácie, postup, zoznam ingrediencií a obrázok.
+     * * @param recept Objekt receptu, ktorý sa má exportovať.
+     */
     public void export(Recept recept) {
         if (recept == null) {
             System.out.println("Žiadny recept na export!");
@@ -33,7 +44,9 @@ public class ReceptExcelExporter {
             workbook = new XSSFWorkbook();
             Sheet sheet = workbook.createSheet("Recept");
 
-            // Štýly
+            // --- Definícia štýlov ---
+
+            // Štýl pre hlavičky sekcií
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
@@ -41,6 +54,7 @@ public class ReceptExcelExporter {
             headerStyle.setFont(font);
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
+            // Štýl pre hlavný názov receptu
             CellStyle titleStyle = workbook.createCellStyle();
             Font titleFont = workbook.createFont();
             titleFont.setBold(true);
@@ -49,23 +63,24 @@ public class ReceptExcelExporter {
 
             int rowNum = 0;
 
-            // Názov receptu
+            // --- Názov receptu ---
             Row titleRow = sheet.createRow(rowNum++);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue(recept.getNazov());
             titleCell.setCellStyle(titleStyle);
+            // Zlúčenie buniek pre nadpis (stĺpce A až E)
             sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
 
-            rowNum++; // prázdny riadok
+            rowNum++; // Vynechaný riadok
 
-            // Informácie
+            // --- Základné informácie o recepte ---
             Row infoRow = sheet.createRow(rowNum++);
             infoRow.createCell(0).setCellValue("Čas prípravy:");
             infoRow.createCell(1).setCellValue(recept.getCasPripravy() + " min");
 
             infoRow = sheet.createRow(rowNum++);
             infoRow.createCell(0).setCellValue("Počet porcií:");
-            infoRow.createCell(1).setCellValue("" + recept.getPocetPorcii());
+            infoRow.createCell(1).setCellValue(String.valueOf(recept.getPocetPorcii()));
 
             infoRow = sheet.createRow(rowNum++);
             infoRow.createCell(0).setCellValue("Kategória:");
@@ -75,48 +90,38 @@ public class ReceptExcelExporter {
             infoRow.createCell(0).setCellValue("Autor:");
             infoRow.createCell(1).setCellValue(recept.getAutor());
 
-            rowNum++; // prázdny riadok
+            rowNum++; // Vynechaný riadok
 
-            // Postup
-            // 1. Vytvorenie štýlu pre zalamovanie textu
+            // --- Postup prípravy ---
             CellStyle wrapStyle = workbook.createCellStyle();
-            wrapStyle.setWrapText(true); // Toto povolí zalamovanie
-            wrapStyle.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.TOP); // Text začne zhora bunky
+            wrapStyle.setWrapText(true); // Povolenie zalamovania textu
+            wrapStyle.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.TOP);
 
-            // 2. Vytvorenie riadku a buniek
             Row postupRow = sheet.createRow(rowNum++);
             postupRow.createCell(0).setCellValue("Postup:");
 
             Cell postupCell = postupRow.createCell(1);
             postupCell.setCellValue(recept.getPostup());
-
-// 3. Priradenie štýlu bunke
             postupCell.setCellStyle(wrapStyle);
 
-// 4. Nastavenie šírky stĺpca (stĺpec B má index 1)
+            // Nastavenie fixnej šírky pre stĺpec s postupom a automatická výška riadku
             sheet.setColumnWidth(1, 15000);
-
-// 5. Automatické nastavenie výšky riadku (Excel ju prispôsobí podľa množstva textu)
             postupRow.setHeight((short)-1);
 
-            // --- VLOŽENIE OBRÁZKA CEZ HTTP ---
+            // --- Vloženie obrázka z webovej adresy ---
             String cestaZDatabazy = recept.getObrazokCesta();
-
             if (cestaZDatabazy != null && !cestaZDatabazy.trim().isEmpty()) {
                 String fullUrl;
-
-                // Kontrola: Ak už cesta začína na http, nepripájame doménu znova
                 if (cestaZDatabazy.startsWith("http")) {
                     fullUrl = cestaZDatabazy;
                 } else {
-                    // Ak je v databáze len "recept_1.jpg", vtedy ju poskladáme
                     fullUrl = "https://cambalik.eu/ReceptyApp/" + recept.getReceptId() + "/" + cestaZDatabazy;
                 }
 
                 byte[] imageBytes = downloadImageFromHTTP(fullUrl);
 
                 if (imageBytes != null && imageBytes.length > 0) {
-                    // ... (zvyšok kódu pre vloženie do Excelu ostáva rovnaký) ...
+                    // Určenie formátu obrázka
                     int pictureType = fullUrl.toLowerCase().endsWith(".png")
                             ? Workbook.PICTURE_TYPE_PNG
                             : Workbook.PICTURE_TYPE_JPEG;
@@ -125,24 +130,26 @@ public class ReceptExcelExporter {
                     CreationHelper helper = workbook.getCreationHelper();
                     Drawing<?> drawing = sheet.createDrawingPatriarch();
 
+                    // Umiestnenie obrázka (stĺpec D, riadok 3)
                     ClientAnchor anchor = helper.createClientAnchor();
                     anchor.setCol1(3);
                     anchor.setRow1(2);
 
                     Picture pict = drawing.createPicture(anchor, pictureIdx);
-                    pict.resize(0.6);
+                    pict.resize(0.6); // Zmenšenie mierky obrázka
                 }
             }
 
-            rowNum += 6; // Priestor pod informáciami, aby sa obrázok neprekrýval s textom dolu
+            // Odsadenie pre ingrediencie, aby sa neprekrývali s obrázkom
+            rowNum += 6;
 
-            // Ingrediencie - hlavička
+            // --- Zoznam ingrediencií ---
             Row ingHeader = sheet.createRow(rowNum++);
             ingHeader.createCell(0).setCellValue("Ingrediencie");
             ingHeader.getCell(0).setCellStyle(headerStyle);
             sheet.addMergedRegion(new CellRangeAddress(rowNum - 1, rowNum - 1, 0, 2));
 
-            // Zoznam ingrediencií z DB
+            // Načítanie ingrediencií z DB a zápis do riadkov
             List<IngredienciaMnozstvo> ingrediencie = db.nacitajIngredienciePreRecept(recept.getReceptId());
             for (IngredienciaMnozstvo ing : ingrediencie) {
                 Row r = sheet.createRow(rowNum++);
@@ -150,12 +157,12 @@ public class ReceptExcelExporter {
                 r.createCell(1).setCellValue(ing.getNazovIngrediencie());
             }
 
-            // Automatické prispôsobenie stĺpcov
+            // Prispôsobenie šírky stĺpcov podľa obsahu
             for (int i = 0; i < 5; i++) {
                 sheet.autoSizeColumn(i);
             }
 
-            // Uloženie súboru
+            // --- Uloženie výsledného súboru ---
             String fileName = "Recept_" + recept.getNazov().replaceAll("[\\\\/:*?\"<>|]", "_") + ".xlsx";
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 workbook.write(fos);
@@ -176,7 +183,11 @@ public class ReceptExcelExporter {
         }
     }
 
-    // Pomocná metóda na stiahnutie dát z webovej adresy
+    /**
+     * Stiahne binárne dáta obrázka z HTTP adresy.
+     * * @param urlPath Kompletná URL adresa k obrázku.
+     * @return Pole bajtov obrázka alebo null v prípade chyby.
+     */
     private byte[] downloadImageFromHTTP(String urlPath) {
         try {
             System.out.println("Sťahujem obrázok: " + urlPath);
