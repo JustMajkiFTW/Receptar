@@ -1,91 +1,156 @@
+/* Globálne farby pre celú aplikáciu */
+.root {
+    /* Svetlé hodnoty ako základ */
+    -fx-base: #f4f6f9;
+    -fx-control-inner-background: white;
+    -fx-text-base-color: #2c3e50;
+    -fx-accent: #3498db;
+}
+
+/* Keď je zapnutý tmavý režim cez AtlantaFX, prepíšeme tie premenné */
+.dark-mode {
+    -fx-base: #1c1c1c;
+    -fx-control-inner-background: #2d2d2d;
+    -fx-text-base-color: white;
+    -fx-accent: #2196f3;
+}
+
+/* Štýl pre tvoje tri hlavné panely */
+.card {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-background-radius: 15;
+}
+
+/* Horná lišta */
+.top-bar-custom {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: derive(-fx-base, -10%);
+    -fx-border-width: 0 0 2 0;
+}
+
+/* Text prihláseného používateľa */
+.user-label {
+    -fx-text-fill: -fx-text-base-color;
+}
+
 /* ========================================================== */
-/* HLAVNÝ KONTAJNER TABUĽKY (TableView)                       */
+/* OPRAVENÁ TABUĽKA (TableView)                               */
 /* ========================================================== */
 
 .table-view {
-    -fx-background-color: white;
+    /* POUŽÍVAME PREMENNÚ NAMIESTO WHITE */
+    -fx-background-color: -fx-control-inner-background;
     -fx-background-radius: 12;
     -fx-border-radius: 12;
-    /* Zabezpečuje, aby pozadie rešpektovalo zaoblenie */
-    -fx-border-color: #ddd;
+    -fx-border-color: derive(-fx-base, -10%);
     -fx-border-width: 1;
 }
 
-/* Pozadie hlavičky stĺpcov */
+/* Pozadie hlavičky stĺpcov - gradient môžeme nechať, ten vyzerá dobre v oboch */
 .table-view .column-header-background {
-    /* Moderný fialovo-modrý gradient */
     -fx-background-color: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
     -fx-background-radius: 12 12 0 0;
 }
 
-/* Štýlovanie textu v hlavičke */
 .table-view .column-header .label {
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
     -fx-padding: 12;
-    -fx-wrap-text: true;
-    -fx-text-alignment: center;
 }
-
-/* Odstránenie predvoleného vnútorného okraja buniek hlavičky */
-.table-view .column-header {
-    -fx-background-color: transparent;
-    -fx-border-color: rgba(255, 255, 255, 0.1);
-    -fx-border-width: 0 1 0 0;
-}
-
-/* ========================================================== */
-/* 1. VZHĽAD RIADKOV (TableRow)                               */
-/* ========================================================== */
 
 .table-row-cell {
-    /* Predvolená farba pozadia pre párne riadky */
-    -fx-background-color: white;
-    -fx-border-color: transparent transparent #f0f0f0 transparent;
+    /* RIADOK DEDÍ FARBU POZADIA TABUĽKY */
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: transparent transparent derive(-fx-base, -5%) transparent;
 }
 
-/* ========================================================== */
-/* 2. ZEBRA PRUHY (Striedanie farieb)                         */
-/* ========================================================== */
-
-/* Štýl pre nepárne riadky (:odd) */
+/* ZEBRA PRUHY - Použijeme mierne odlišný odtieň základnej farby */
 .table-row-cell:odd {
-    /* Svetlomodrý nádych pre lepšiu čitateľnosť */
-    -fx-background-color: #f8fbff;
+    -fx-background-color: derive(-fx-control-inner-background, -2%);
 }
 
-/* ========================================================== */
-/* 3. HOVER EFEKT (Prejdenie myšou)                           */
-/* ========================================================== */
-
+/* HOVER EFEKT - Prispôsobený tak, aby fungoval v tme aj svetle */
 .table-row-cell:hover {
-    /* Zvýraznenie riadku pri ukázaní myšou */
-    -fx-background-color: #dbeafe;
-    -fx-cursor: hand;
+    -fx-background-color: derive(-fx-control-inner-background, -10%);
 }
 
-/* ========================================================== */
-/* 4. VYBRANÝ RIADOK (Selection)                              */
-/* ========================================================== */
-
+/* VYBRANÝ RIADOK */
 .table-row-cell:selected {
-    /* Výraznejšia modrá pre označený záznam */
-    -fx-background-color: #93c5fd;
+    -fx-background-color: -fx-accent; /* Použije systémovú modrú z AtlantaFX */
 }
 
-/* Zmena farby textu pri výbere (ak je pozadie tmavé) */
 .table-row-cell:selected .text {
-    -fx-fill: #1e40af; /* Tmavomodrý text pre lepší kontrast na svetlomodrej */
+    -fx-fill: white;
     -fx-font-weight: bold;
 }
 
-/* Odstránenie modrého "focus" rámčeka okolo buniek */
-.table-view:focused {
-    -fx-background-insets: 0;
+/* Toto zaistí, že trieda .card a .table-view budú reagovať na zmenu témy */
+.card, .table-view {
+    -fx-background-color: -fx-control-inner-background;
 }
 
-.table-cell {
-    -fx-padding: 8;
-    -fx-alignment: center-left;
+/* Toto opraví texty v tabuľke, aby boli biele v tme */
+.table-row-cell {
+    -fx-text-fill: -fx-text-base-color;
 }
+
+/* Tvoj vlastný switch */
+.my-switch {
+    -fx-background-color: #d1d1d1;
+    -fx-background-radius: 20;
+    -fx-min-width: 50;
+    -fx-min-height: 24;
+    -fx-max-height: 24;
+    -fx-padding: 0;
+    -fx-text-fill: transparent; /* Skryje text vnútri */
+}
+
+/* Gulička vo vnútri */
+.my-switch .graphic {
+    -fx-background-color: white;
+    -fx-background-radius: 50%;
+    -fx-min-width: 20;
+    -fx-min-height: 20;
+    -fx-translate-x: -12; /* Pozícia vľavo */
+}
+
+/* Stav keď je zapnutý */
+.my-switch:selected {
+    -fx-background-color: #6c5ce7;
+}
+
+.my-switch:selected .graphic {
+    -fx-translate-x: 12; /* Pozícia vpravo */
+}
+
+.button {
+    -fx-font-size: 13px; /* Zväčší text aj emoji ikonky v tlačidlách */
+}
+
+/* Pridaj toto do styles.css */
+.theme-switcher {
+    -fx-font-size: 14px;
+    -fx-min-width: 45px;
+    -fx-min-height: 45px;
+    -fx-background-radius: 50%; /* Urobí z tlačidla dokonalý kruh */
+    -fx-border-color: derive(-fx-base, -10%);
+    -fx-border-width: 1px;
+    -fx-transition: all 0.3s ease-in-out; /* Ak tvoja verzia JavaFX podporuje animácie */
+}
+
+.theme-switcher:hover {
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+/* Predvolený separator pre svetlý režim */
+.my-separator {
+    -fx-background-color: #bdc3c7; /* Pekná sivá pre svetlý režim */
+    -fx-max-height: 1px;
+}
+
+/* Separator pre tmavý režim */
+.dark-mode .my-separator {
+    -fx-background-color: derive(-fx-accent, -50%);}
+

@@ -7,28 +7,20 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
+import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -118,6 +110,7 @@ public class ReceptyFXApp extends Application {
     }
 
     public void start(Stage stage) {
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         System.setProperty("javafx.platform", "win");
         System.setProperty("https.protocols", "TLSv1.2,TLSv1.3");
         System.setProperty("jdk.tls.client.protocols", "TLSv1.2,TLSv1.3");
@@ -130,10 +123,10 @@ public class ReceptyFXApp extends Application {
         this.cbKategoria.setPrefWidth(300.0);
         this.cbIngrediencia.setPrefWidth(300.0);
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #f4f6f9;");
+        root.getStyleClass().add("root");
         HBox topBar = new HBox(15.0);
         topBar.setPadding(new Insets(14.0, 25.0, 14.0, 25.0));
-        topBar.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-width: 0 0 2 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3);");
+        topBar.getStyleClass().add("top-bar-custom");
         HBox leftActions = new HBox(10.0);
         leftActions.setAlignment(Pos.CENTER_LEFT);
         Button btnNovy = createModernButton("Pridať nový recept", "#27ae60");
@@ -161,9 +154,45 @@ public class ReceptyFXApp extends Application {
         leftActions.getChildren().addAll(btnNovy, btnUlozit, btnZmazat, btnVycistit, btnExcel);
         HBox rightBox = new HBox(15.0);
         rightBox.setAlignment(Pos.CENTER_RIGHT);
+        ToggleButton themeBtn = new ToggleButton("Tmavý režim");
+        themeBtn.getStyleClass().clear();
+//        themeBtn.getStyleClass().setAll("my-switch");
+        themeBtn.getStyleClass().addAll("button", "pill", "accent");
+        themeBtn.setPadding(new Insets(0, 10, 0, 10));
+        themeBtn.setMinHeight(35);
+        themeBtn.setText("\uD83C\uDF19"); // Predvolená ikonka
+        themeBtn.setOnAction(e -> {
+            var styleClasses = root.getStyleClass();
+            var btnClasses = themeBtn.getStyleClass();
+
+            // 1. Dôležité: Vymažeme text, aby tam nezostávali divné znaky
+            themeBtn.setText("");
+
+            if (themeBtn.isSelected()) {
+                Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+                if (!styleClasses.contains("dark-mode")) styleClasses.add("dark-mode");
+
+                btnClasses.remove("accent");
+                btnClasses.add("faint");
+
+                // Nastavíme len čistú ikonu mesiaca
+                themeBtn.setText("\u2600");
+            } else {
+                Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+                styleClasses.remove("dark-mode");
+
+                btnClasses.remove("faint");
+                btnClasses.add("accent");
+
+                // Nastavíme len čistú ikonu slnka
+                themeBtn.setText("\uD83C\uDF19");
+
+
+            }
+        });
         Label lblUser = new Label("Prihlásený: " + loggedInUser);
         lblUser.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15.0));
-        lblUser.setStyle("-fx-text-fill: #2c3e50;");
+        lblUser.getStyleClass().add("user-label");
         Button btnZmenitHeslo = createModernButton("Zmeniť heslo", "#9b59b6");
         btnZmenitHeslo.setOnAction(e -> showPasswordChangeDialog());
         Button btnLogout = createModernButton("Odhlásiť", "#e74c3c");
@@ -171,7 +200,7 @@ public class ReceptyFXApp extends Application {
             stage.close();
             (new LoginApp()).start(new Stage());
         });
-        rightBox.getChildren().addAll(lblUser, btnZmenitHeslo, btnLogout);
+        rightBox.getChildren().addAll(lblUser, btnZmenitHeslo, btnLogout, themeBtn);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         topBar.getChildren().addAll(leftActions, spacer, rightBox);
@@ -199,6 +228,10 @@ public class ReceptyFXApp extends Application {
         stage.setScene(scene);
         stage.setMaximized(false);
         stage.show();
+        URL cssUrl = getClass().getResource("/styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
     }
 
     private void showPasswordChangeDialog() {
@@ -265,9 +298,8 @@ public class ReceptyFXApp extends Application {
     private VBox createLeftPanel() {
         VBox box = new VBox(10.0);
         box.setPadding(new Insets(18.0));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");
-        box.setPrefWidth(380.0);
-        Label title = new Label("Pridanie receptu");
+        box.getStyleClass().add("card");
+        box.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");        Label title = new Label("Pridanie receptu");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 17.0));
         this.lblVybrany = new Label("Vybraný recept: -");
         this.lblId = new Label();
@@ -297,8 +329,8 @@ public class ReceptyFXApp extends Application {
         VBox box = new VBox(20.0);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(20.0));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");
-        Label lblImg = new Label("Fotka receptu");
+        box.getStyleClass().add("card");
+        box.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");        Label lblImg = new Label("Fotka receptu");
         lblImg.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18.0));
         this.imgView = new ImageView();
         this.imgView.setFitWidth(380.0);
@@ -323,9 +355,10 @@ public class ReceptyFXApp extends Application {
         topSection.getChildren().addAll(lblImg, this.imgView, imgButtons);
         topSection.setAlignment(Pos.CENTER);
         Separator separator = new Separator();
-        separator.setStyle("-fx-background-color: #bdc3c7;");
+        separator.getStyleClass().add("my-separator");
         VBox ingBox = new VBox(8.0);
-        ingBox.setStyle("-fx-background-color: #f8fff8; -fx-padding: 12; -fx-background-radius: 10;");
+        ingBox.getStyleClass().add("card");
+        ingBox.setStyle("-fx-padding: 12; -fx-background-radius: 10;");
         Label lblIng = new Label("Pridať ingredienciu:");
         lblIng.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13.0));
         this.cbIngrediencia.setEditable(true);
@@ -341,6 +374,7 @@ public class ReceptyFXApp extends Application {
         Button btnPridatIng = createModernButton("Pridať do receptu", "#27ae60");
         btnPridatIng.setOnAction(e -> pridajDocasnuIngredienciu());
         this.tableDocasne = new TableView<>();
+        this.tableDocasne.getStyleClass().add("table-view");
         this.tableDocasne.setItems(this.docasneIngrediencie);
         TableColumn<IngredienciaMnozstvo, String> colIng = new TableColumn<>("Ingrediencia");
         colIng.setCellValueFactory(new PropertyValueFactory<>("nazovIngrediencie"));
@@ -359,8 +393,8 @@ public class ReceptyFXApp extends Application {
     private VBox createRightPanel() {
         VBox box = new VBox(10.0);
         box.setPadding(new Insets(18.0));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");
-
+        box.getStyleClass().add("card");
+        box.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");
         Label title = new Label("Zoznam receptov");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 17.0));
 
@@ -419,6 +453,7 @@ public class ReceptyFXApp extends Application {
 
         // TABUĽKA INGREDIENCIÍ
         this.tableIngrediencie = new TableView<>();
+        this.tableIngrediencie.getStyleClass().add("table-view");
         this.tableIngrediencie.setItems(this.ingrediencieReceptu);
 
         TableColumn<IngredienciaMnozstvo, String> colIngNazov = new TableColumn<>("Ingrediencia");
@@ -779,7 +814,7 @@ public class ReceptyFXApp extends Application {
         if (table == null) {
             System.out.println("Tabuľka je null – preskočené štýlovanie");
         } else {
-            table.setStyle("-fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 4);");
+            table.setStyle("-fx-border-color: #e0e0e0; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 4);");
             table.setFixedCellSize(45.0);
             table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         }
