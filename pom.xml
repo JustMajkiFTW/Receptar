@@ -25,6 +25,8 @@
         <!-- Hlavntrieda aplik-->
         <mainClass>LoginApp</mainClass>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <!-- Novvlastnospre cieadresJavaFX modulov -->
         <javafx.module.output>${project.build.directory}/javafx-modules</javafx.module.output>
         <!-- Verzia JavaFX Maven Pluginu (pridanpre konzistenciu) -->
@@ -100,6 +102,12 @@
             <version>3.10.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+
     </dependencies>
 
 
@@ -162,7 +170,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>sk.receptar.Launcher</mainClass> <!-- Tu tiež plný názov launcher triedy -->
+                    <mainClass>Launcher</mainClass> <!-- Tu tiež plný názov launcher triedy -->
                 </configuration>
             </plugin>
         </plugins>
