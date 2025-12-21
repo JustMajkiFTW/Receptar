@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -342,9 +345,22 @@ public class ReceptyFXApp extends Application {
         this.tfSearch.setPromptText("Hľadať...");
         this.tfSearch.textProperty().addListener((obs, oldVal, newVal) -> updateFilter());
         this.cbFilterKategoria = new ComboBox<>();
-        this.cbFilterKategoria.setItems(FXCollections.observableArrayList(this.db.nacitajVsetkyKategorie()));
+
+// 1. Načítaj kategórie z DB
+        List<Kategoria> kategorieZDB = this.db.nacitajVsetkyKategorie();
+
+// 2. Vytvor zoznam a pridaj "Všetky" na začiatok
+        ObservableList<Kategoria> vsetkyKategorie = FXCollections.observableArrayList();
+        vsetkyKategorie.add(new Kategoria(-1, "Všetky kategórie")); // Špeciálne ID -1
+        vsetkyKategorie.addAll(kategorieZDB);
+
+        this.cbFilterKategoria.setItems(vsetkyKategorie);
         this.cbFilterKategoria.setPromptText("Filter podľa kategórie");
+
+// 3. Listener na zmenu hodnoty
         this.cbFilterKategoria.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+
+// 4. Pridanie do tvojho searchBoxu
         HBox searchBox = new HBox(10.0);
         searchBox.getChildren().addAll(this.tfSearch, this.cbFilterKategoria);
         HBox.setHgrow(this.tfSearch, Priority.ALWAYS);
@@ -393,29 +409,46 @@ public class ReceptyFXApp extends Application {
     }
     private void updateFilter() {
         this.filteredRecepty.setPredicate(recept -> {
+            // 1. Filter podľa kategórie
             Kategoria selectedKategoria = this.cbFilterKategoria.getValue();
-            boolean matchesKategoria = selectedKategoria == null || recept.getKategoriaId() == selectedKategoria.getId();
+
+            // Úprava: Ak je vybraté null ALEBO ID -1, tak kategóriu nefiltrujeme (match je vždy true)
+            boolean matchesKategoria = (selectedKategoria == null ||
+                    selectedKategoria.getId() == -1 ||
+                    recept.getKategoriaId() == selectedKategoria.getId());
+
             if (!matchesKategoria) {
                 return false;
             }
-            String searchText = this.tfSearch.getText().toLowerCase();
+
+            // 2. Filter podľa textu (vyhľadávanie)
+            String searchText = this.tfSearch.getText().toLowerCase().trim();
             if (searchText.isEmpty()) {
                 return true;
             }
+
+            // Kontrola názvu
             if (recept.getNazov().toLowerCase().contains(searchText)) {
                 return true;
             }
+            // Kontrola času
             if (String.valueOf(recept.getCasPripravy()).contains(searchText)) {
                 return true;
             }
+            // Kontrola porcií
             if (String.valueOf(recept.getPocetPorcii()).contains(searchText)) {
                 return true;
             }
+
+            // Kontrola ingrediencií
+            // POZOR: Toto volanie db.nacitajIngredienciePreRecept vnútri filtra
+            // môže spomaliť UI, ak máte veľa receptov.
             for (IngredienciaMnozstvo ing : this.db.nacitajIngredienciePreRecept(recept.getReceptId())) {
                 if (ing.getNazovIngrediencie().toLowerCase().contains(searchText)) {
                     return true;
                 }
             }
+
             return false;
         });
     }
