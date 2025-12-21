@@ -352,7 +352,7 @@ public class DBConnect {
                         rs.getInt("kategoria_id"),
                         rs.getString("kat_nazov"),
                         rs.getInt("user_id"),
-                        rs.getString("author")
+                        rs.getString("autor")
                 ));
             }
         } catch (SQLException e) {
