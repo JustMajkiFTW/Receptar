@@ -22,7 +22,7 @@ public class EmailSender {
     private static final String USERNAME = "recepty@cambalik.eu";
 
     /** Heslo pre SMTP autentifikáciu */
-    private static final String PASSWORD = "LyzMcP3ijDQcpWr";
+    private static final String PASSWORD = "";
 
     /** Adresa SMTP hostiteľa (určená automaticky) */
     private static final String HOST;
