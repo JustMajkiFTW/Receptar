@@ -136,6 +136,11 @@ public class ReceptyFXApp extends Application {
         btnUlozit.setOnAction(e -> ulozRecept(false));
         Button btnZmazat = createModernButton("Zmazať recept", "#e74c3c");
         btnZmazat.setOnAction(e -> zmazRecept());
+        if (UserSession.getInstance() != null) {
+            boolean admin = UserSession.getInstance().isAdmin();
+            btnZmazat.setVisible(admin);
+            btnZmazat.setManaged(admin);
+        }
         Button btnVycistit = createModernButton("Vyčistiť formulár", "#95a5a6");
         btnVycistit.setOnAction(e -> vycistiFormular());
         Button btnExcel = createModernButton("Exportovať do Excelu", "#f39c12");
@@ -296,6 +301,11 @@ public class ReceptyFXApp extends Application {
             this.imgView.setImage(null);
             this.obrazokCesta = "";
         });
+        if (UserSession.getInstance() != null) {
+            boolean admin = UserSession.getInstance().isAdmin();
+            btnZmazatObrazok.setVisible(admin);
+            btnZmazatObrazok.setManaged(admin);
+        }
         HBox imgButtons = new HBox(15.0);
         imgButtons.getChildren().addAll(btnVybrat, btnZmazatObrazok);
         imgButtons.setAlignment(Pos.CENTER);
@@ -339,72 +349,93 @@ public class ReceptyFXApp extends Application {
         VBox box = new VBox(10.0);
         box.setPadding(new Insets(18.0));
         box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);");
+
         Label title = new Label("Zoznam receptov");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 17.0));
+
         this.tfSearch = new TextField();
         this.tfSearch.setPromptText("Hľadať...");
         this.tfSearch.textProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+
         this.cbFilterKategoria = new ComboBox<>();
-
-// 1. Načítaj kategórie z DB
         List<Kategoria> kategorieZDB = this.db.nacitajVsetkyKategorie();
-
-// 2. Vytvor zoznam a pridaj "Všetky" na začiatok
         ObservableList<Kategoria> vsetkyKategorie = FXCollections.observableArrayList();
-        vsetkyKategorie.add(new Kategoria(-1, "Všetky kategórie")); // Špeciálne ID -1
+        vsetkyKategorie.add(new Kategoria(-1, "Všetky kategórie"));
         vsetkyKategorie.addAll(kategorieZDB);
-
         this.cbFilterKategoria.setItems(vsetkyKategorie);
         this.cbFilterKategoria.setPromptText("Filter podľa kategórie");
-
-// 3. Listener na zmenu hodnoty
         this.cbFilterKategoria.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
 
-// 4. Pridanie do tvojho searchBoxu
         HBox searchBox = new HBox(10.0);
         searchBox.getChildren().addAll(this.tfSearch, this.cbFilterKategoria);
         HBox.setHgrow(this.tfSearch, Priority.ALWAYS);
+
         this.tableRecepty = new TableView<>();
         this.filteredRecepty = new FilteredList<>(this.recepty);
         this.sortedRecepty = new SortedList<>(this.filteredRecepty);
         this.sortedRecepty.comparatorProperty().bind(this.tableRecepty.comparatorProperty());
         this.tableRecepty.setItems(this.sortedRecepty);
+
+        // STĹPCE TABUĽKY RECEPTOV
         TableColumn<Recept, String> colNazov = new TableColumn<>("Názov");
         colNazov.setCellValueFactory(new PropertyValueFactory<>("nazov"));
+
         TableColumn<Recept, Integer> colCas = new TableColumn<>("Čas");
         colCas.setCellValueFactory(new PropertyValueFactory<>("casPripravy"));
+
         TableColumn<Recept, Integer> colPorcie = new TableColumn<>("Porcie");
         colPorcie.setCellValueFactory(new PropertyValueFactory<>("pocetPorcii"));
+
         TableColumn<Recept, String> colKategoria = new TableColumn<>("Kategória");
         colKategoria.setCellValueFactory(new PropertyValueFactory<>("kategoriaNazov"));
-        this.tableRecepty.getColumns().addAll(colNazov, colCas, colPorcie, colKategoria);
+
+        // NOVO PRIDANÝ STĹPEC AUTOR
+        TableColumn<Recept, String> colAutor = new TableColumn<>("Autor");
+        colAutor.setCellValueFactory(new PropertyValueFactory<>("autor"));
+
+        // Pridanie stĺpcov do tabuľky (colAutor pridaný na koniec)
+        this.tableRecepty.getColumns().addAll(colNazov, colCas, colPorcie, colKategoria, colAutor);
+
         this.tableRecepty.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         this.tableRecepty.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 zobrazRecept(newSelection);
             }
         });
+
         nastylujTabulku(this.tableRecepty);
         VBox.setVgrow(this.tableRecepty, Priority.ALWAYS);
+
+        // TABUĽKA INGREDIENCIÍ
         this.tableIngrediencie = new TableView<>();
         this.tableIngrediencie.setItems(this.ingrediencieReceptu);
+
         TableColumn<IngredienciaMnozstvo, String> colIngNazov = new TableColumn<>("Ingrediencia");
         colIngNazov.setCellValueFactory(new PropertyValueFactory<>("nazovIngrediencie"));
+
         TableColumn<IngredienciaMnozstvo, Double> colIngMnozstvo = new TableColumn<>("Množstvo");
         colIngMnozstvo.setCellValueFactory(new PropertyValueFactory<>("mnozstvo"));
+
         TableColumn<IngredienciaMnozstvo, String> colIngJednotka = new TableColumn<>("Jednotka");
         colIngJednotka.setCellValueFactory(new PropertyValueFactory<>("jednotka"));
+
         this.tableIngrediencie.getColumns().addAll(colIngNazov, colIngMnozstvo, colIngJednotka);
         this.tableIngrediencie.setPrefHeight(200.0);
         this.tableIngrediencie.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         nastylujTabulku(this.tableIngrediencie);
+
         Button btnOdstranIng = createModernButton("Odstrániť ingredienciu", "#e74c3c");
         btnOdstranIng.setOnAction(e -> odstranIngredienciuZReceptu());
+
         Label lblIngReceptu = new Label("Ingrediencie receptu:");
         lblIngReceptu.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13.0));
+
         VBox ingReceptBox = new VBox(8.0);
         ingReceptBox.getChildren().addAll(lblIngReceptu, this.tableIngrediencie, btnOdstranIng);
+
         box.getChildren().addAll(title, searchBox, this.tableRecepty, ingReceptBox);
+
         return box;
     }
     private void updateFilter() {

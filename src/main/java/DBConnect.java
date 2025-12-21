@@ -61,6 +61,26 @@
 /*     */     } 
 /*  44 */     return false;
 /*     */   }
+
+    public String[] overPouzivatela(String email, String heslo) {
+        String sql = "SELECT id, username, password, rola FROM users WHERE username = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String hash = rs.getString("password");
+                if (BCrypt.checkpw(heslo, hash)) {
+                    // Vrátime ID, Meno a Rolu
+                    return new String[]{
+                            String.valueOf(rs.getInt("id")),
+                            rs.getString("username"),
+                            rs.getString("rola")
+                    };
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
 /*     */   
 /*     */   public boolean register(String username, String password, String email) {
 /*  48 */     String hashed = BCrypt.hashpw(password, BCrypt.gensalt());

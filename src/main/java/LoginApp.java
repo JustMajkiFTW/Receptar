@@ -114,55 +114,120 @@ public class LoginApp extends Application {
         stackPane.setMaxWidth(300.0);
         return stackPane;
     }
-
     private void showLogin(Stage stage) {
         VBox box = new VBox(15.0);
         box.setPadding(new Insets(30.0));
         box.setAlignment(Pos.CENTER);
-        box.setStyle("-fx-background-color: white; -fx-border-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
+        box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
+
         Label lbl = new Label("Prihlásenie");
         lbl.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+
+        // Zmenil som txtUser na txtEmail, pretože v DBConnect hľadáš podľa emailu
         TextField txtUser = new TextField();
-        txtUser.setPromptText("Používateľské meno");
+        txtUser.setPromptText("Používateľské meno"); // Pôvodný text
         txtUser.setStyle("-fx-background-radius: 25; -fx-padding: 12; -fx-font-size: 14px;");
         txtUser.setMaxWidth(300.0);
-        StackPane passwordContainer = createPasswordToggle("Heslo");
-        passwordContainer.setStyle(txtUser.getStyle());
-        PasswordField txtPass = (PasswordField)passwordContainer.getChildren().stream().filter((node) -> {
-            return node instanceof PasswordField;
-        }).findFirst().get();
-        txtPass.setMaxWidth(300.0);
-        Label lblZabudnute = new Label("Zabudnuté heslo?");
-        lblZabudnute.setStyle("-fx-text-fill: #349 siedzib; -fx-cursor: hand; -fx-font-size: 13px;");
-        lblZabudnute.setOnMouseEntered((e) -> {
-            lblZabudnute.setUnderline(true);
-        });
-        lblZabudnute.setOnMouseExited((e) -> {
-            lblZabudnute.setUnderline(false);
-        });
-        lblZabudnute.setOnMouseClicked((e) -> {
-            this.otvorZabudnuteHeslo(stage);
-        });
-        Button btnSubmit = this.createModernButton("Prihlásiť sa", "#3498db");
-        btnSubmit.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10 40; -fx-background-radius: 8;");
-        btnSubmit.setOnAction((e) -> {
-            if (this.db.login(txtUser.getText(), txtPass.getText())) {
-                stage.close();
-                ReceptyFXApp.startWithUser(new Stage(), txtUser.getText());
-            } else {
-                this.alert("Chyba", "Nesprávne meno alebo heslo.");
-            }
 
+        StackPane passwordContainer = createPasswordToggle("Heslo");
+        // Oprava: getStyle() vracal polomery a padding, ale nie maxWidth
+        passwordContainer.setMaxWidth(300.0);
+
+        PasswordField txtPass = (PasswordField)passwordContainer.getChildren().stream()
+                .filter(node -> node instanceof PasswordField)
+                .findFirst().get();
+
+        Label lblZabudnute = new Label("Zabudnuté heslo?");
+        lblZabudnute.setStyle("-fx-text-fill: #3498db; -fx-cursor: hand; -fx-font-size: 13px;");
+        lblZabudnute.setOnMouseEntered(e -> lblZabudnute.setUnderline(true));
+        lblZabudnute.setOnMouseExited(e -> lblZabudnute.setUnderline(false));
+        lblZabudnute.setOnMouseClicked(e -> this.otvorZabudnuteHeslo(stage));
+
+        Button btnSubmit = this.createModernButton("Prihlásiť sa", "#27ae60");
+        btnSubmit.setOnAction((e) -> {
+            // 1. Zavoláme metódu, ktorá vráti [ID, Meno, Rola]
+            String[] udaje = this.db.overPouzivatela(txtUser.getText(), txtPass.getText());
+
+            if (udaje != null) {
+                // 2. Naplníme UserSession (udaje[2] je tá rola "admin"/"user")
+                UserSession.login(
+                        Integer.parseInt(udaje[0]),
+                        udaje[1],
+                        udaje[2]
+                );
+
+                System.out.println("Login úspešný! Rola: " + udaje[2]);
+
+                // 3. Zavrieme login a otvoríme hlavnú app
+                stage.close();
+
+                // Tu použi názov svojej hlavnej triedy, predpokladám ReceptarApp
+                try {
+                    ReceptyFXApp.startWithUser(new Stage(), udaje[1]);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                this.alert("Chyba", "Nesprávny email alebo heslo.");
+            }
         });
-        Button btnBack = this.createModernButton("Späť na úvod", "#636e72");
-        btnBack.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 8;");
-        btnBack.setOnAction((e) -> {
-            stage.setScene(this.homeScene);
-        });
-        box.getChildren().addAll(new Node[]{lbl, txtUser, passwordContainer, lblZabudnute, btnSubmit, btnBack});
-        Scene scene = new Scene(box, 450.0, 350.0);
+
+        Button btnBack = this.createModernButton("Späť na úvod", "#95a5a6");
+        btnBack.setOnAction((e) -> stage.setScene(this.homeScene));
+
+        box.getChildren().addAll(lbl, txtUser, passwordContainer, lblZabudnute, btnSubmit, btnBack);
+
+        Scene scene = new Scene(box, 450.0, 400.0);
         stage.setScene(scene);
     }
+//    private void showLogin(Stage stage) {
+//        VBox box = new VBox(15.0);
+//        box.setPadding(new Insets(30.0));
+//        box.setAlignment(Pos.CENTER);
+//        box.setStyle("-fx-background-color: white; -fx-border-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
+//        Label lbl = new Label("Prihlásenie");
+//        lbl.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+//        TextField txtUser = new TextField();
+//        txtUser.setPromptText("Používateľské meno");
+//        txtUser.setStyle("-fx-background-radius: 25; -fx-padding: 12; -fx-font-size: 14px;");
+//        txtUser.setMaxWidth(300.0);
+//        StackPane passwordContainer = createPasswordToggle("Heslo");
+//        passwordContainer.setStyle(txtUser.getStyle());
+//        PasswordField txtPass = (PasswordField)passwordContainer.getChildren().stream().filter((node) -> {
+//            return node instanceof PasswordField;
+//        }).findFirst().get();
+//        txtPass.setMaxWidth(300.0);
+//        Label lblZabudnute = new Label("Zabudnuté heslo?");
+//        lblZabudnute.setStyle("-fx-text-fill: #349 siedzib; -fx-cursor: hand; -fx-font-size: 13px;");
+//        lblZabudnute.setOnMouseEntered((e) -> {
+//            lblZabudnute.setUnderline(true);
+//        });
+//        lblZabudnute.setOnMouseExited((e) -> {
+//            lblZabudnute.setUnderline(false);
+//        });
+//        lblZabudnute.setOnMouseClicked((e) -> {
+//            this.otvorZabudnuteHeslo(stage);
+//        });
+//        Button btnSubmit = this.createModernButton("Prihlásiť sa", "#3498db");
+//        btnSubmit.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10 40; -fx-background-radius: 8;");
+//        btnSubmit.setOnAction((e) -> {
+//            if (this.db.login(txtUser.getText(), txtPass.getText())) {
+//                stage.close();
+//                ReceptyFXApp.startWithUser(new Stage(), txtUser.getText());
+//            } else {
+//                this.alert("Chyba", "Nesprávne meno alebo heslo.");
+//            }
+//
+//        });
+//        Button btnBack = this.createModernButton("Späť na úvod", "#636e72");
+//        btnBack.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 8;");
+//        btnBack.setOnAction((e) -> {
+//            stage.setScene(this.homeScene);
+//        });
+//        box.getChildren().addAll(new Node[]{lbl, txtUser, passwordContainer, lblZabudnute, btnSubmit, btnBack});
+//        Scene scene = new Scene(box, 450.0, 350.0);
+//        stage.setScene(scene);
+//    }
 
     private void otvorZabudnuteHeslo(Stage parentStage) {
         Stage stage = new Stage();
