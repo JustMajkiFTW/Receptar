@@ -13,6 +13,8 @@ public class IngredienciaMnozstvo {
     /** Merná jednotka (napr. g, kg, ks, ml) */
     private final String jednotka;
 
+    private double kalorie;
+
     /**
      * Konštruktor pre vytvorenie záznamu o množstve ingrediencie.
      * Vykonáva základné ošetrenie vstupov (null safety).
@@ -20,10 +22,11 @@ public class IngredienciaMnozstvo {
      * @param mnozstvo Číselné množstvo
      * @param jednotka Merná jednotka (ak je null, nastaví sa prázdny reťazec)
      */
-    public IngredienciaMnozstvo(String nazov, double mnozstvo, String jednotka) {
+    public IngredienciaMnozstvo(String nazov, double mnozstvo, String jednotka, double kalorie) {
         this.nazov = (nazov != null) ? nazov : "Neznáma ingrediencia";
         this.mnozstvo = mnozstvo;
         this.jednotka = (jednotka != null) ? jednotka : "";
+        this.kalorie = kalorie;
     }
 
     /**
@@ -57,6 +60,8 @@ public class IngredienciaMnozstvo {
     public String getJednotka() {
         return this.jednotka;
     }
+
+    public double getKalorie() {return kalorie;}
 
     /**
      * Prekrytá metóda toString pre formátovaný výpis ingrediencie.

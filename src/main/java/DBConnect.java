@@ -256,34 +256,37 @@ public class DBConnect {
     /**
      * Pomocná metóda, ktorá vráti ID ingrediencie podľa názvu.
      * Ak ingrediencia neexistuje, vytvorí ju.
-     * @param nazov Názov ingrediencie
+     *
+     * @param nazov   Názov ingrediencie
+     * @param kalorie
      * @return ID ingrediencie alebo -1 pri chybe
      */
-    private int getOrCreateIngredienciaId(String nazov) {
-        String sql = "SELECT ingrediencia_id FROM ingrediencie WHERE nazov = ?";
-        try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
+    private int getOrCreateIngredienciaId(String nazov, double kalorie) {
+        // 1. Skúsime nájsť, či už ingredienciu máme
+        String sqlSelect = "SELECT ingrediencia_id FROM ingrediencie WHERE nazov = ?";
+        try (PreparedStatement ps = this.conn.prepareStatement(sqlSelect)) {
             ps.setString(1, nazov);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("ingrediencia_id");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
 
-        String insert = "INSERT INTO ingrediencie (nazov) VALUES (?)";
-        try (PreparedStatement ps = this.conn.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
+        // 2. Ak neexistuje, vytvoríme novú a ULOŽÍME KALÓRIE z API
+        String sqlInsert = "INSERT INTO ingrediencie (nazov, kalorie) VALUES (?, ?)";
+        try (PreparedStatement ps = this.conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, nazov);
+            ps.setDouble(2, kalorie); // Sem sa zapíše hodnota z API
             ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
+
         return -1;
     }
 
@@ -427,11 +430,13 @@ public class DBConnect {
      */
     public List<IngredienciaMnozstvo> nacitajIngredienciePreRecept(int receptId) {
         List<IngredienciaMnozstvo> list = new ArrayList<>();
-        String sql = "SELECT i.nazov, ri.mnozstvo, ri.jednotka " +
+        // PRIDANÉ MEDZERY na koncoch riadkov pred úvodzovkami
+        String sql = "SELECT i.nazov, ri.mnozstvo, ri.jednotka, i.kalorie " +
                 "FROM recept_ingrediencie ri " +
                 "JOIN ingrediencie i ON ri.ingrediencia_id = i.ingrediencia_id " +
                 "WHERE ri.recept_id = ? " +
                 "ORDER BY i.nazov";
+
         try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
             ps.setInt(1, receptId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -439,16 +444,17 @@ public class DBConnect {
                     list.add(new IngredienciaMnozstvo(
                             rs.getString("nazov"),
                             rs.getDouble("mnozstvo"),
-                            rs.getString("jednotka")
+                            rs.getString("jednotka"),
+                            rs.getDouble("kalorie")
                     ));
                 }
             }
         } catch (SQLException e) {
+            System.err.println("Chyba v SQL dopyte: " + e.getMessage());
             e.printStackTrace();
         }
         return list;
     }
-
     /**
      * Odstráni všetky väzby ingrediencií pre daný recept.
      * @param receptId ID receptu
@@ -466,8 +472,10 @@ public class DBConnect {
     /**
      * Pridá ingredienciu k receptu (vytvorí záznam v prepájacej tabuľke).
      */
-    public void pridajIngredienciuDoReceptu(int receptId, String nazovIngrediencie, double mnozstvo, String jednotka) {
-        int ingId = getOrCreateIngredienciaId(nazovIngrediencie);
+    public void pridajIngredienciuDoReceptu(int receptId, String nazovIngrediencie, double mnozstvo, String jednotka, double kalorie) {
+        // Posielame kalórie do metódy, ktorá sa stará o číselník ingrediencií
+        int ingId = getOrCreateIngredienciaId(nazovIngrediencie, kalorie);
+
         String sql = "INSERT INTO recept_ingrediencie (recept_id, ingrediencia_id, mnozstvo, jednotka) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
             ps.setInt(1, receptId);
@@ -483,14 +491,19 @@ public class DBConnect {
     /**
      * Odstráni jednu konkrétnu ingredienciu z receptu na základe presnej zhody údajov.
      */
-    public void odstranJednuIngredienciu(int receptId, String nazov, double mnozstvo, String jednotka) {
-        int ingId = getOrCreateIngredienciaId(nazov);
-        String sql = "DELETE FROM recept_ingrediencie WHERE recept_id = ? AND ingrediencia_id = ? AND mnozstvo = ? AND jednotka = ?";
+    public void odstranJednuIngredienciu(int receptId, String nazovIngrediencie, double mnozstvo, String jednotka) {
+        // 1. Musíme nájsť ID ingrediencie podľa názvu, aby sme vedeli, čo zmazať z väzobnej tabuľky
+        String sql = "DELETE FROM recept_ingrediencie " +
+                "WHERE recept_id = ? AND ingrediencia_id = (SELECT ingrediencia_id FROM ingrediencie WHERE nazov = ? LIMIT 1) " +
+                "AND mnozstvo = ? AND jednotka = ?";
+
         try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
-            ps.setInt(1, receptId);
-            ps.setInt(2, ingId);
-            ps.setDouble(3, mnozstvo);
-            ps.setString(4, jednotka);
+            // TOTO JE TO KRITICKÉ MIESTO: Musíš nastaviť VŠETKY parametre v správnom poradí
+            ps.setInt(1, receptId);           // Parameter 1
+            ps.setString(2, nazovIngrediencie); // Parameter 2 (TU BOLA CHYBA)
+            ps.setDouble(3, mnozstvo);        // Parameter 3
+            ps.setString(4, jednotka);        // Parameter 4
+
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
