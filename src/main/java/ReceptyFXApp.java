@@ -382,7 +382,16 @@ public class ReceptyFXApp extends Application {
         colMnoz.setCellValueFactory(new PropertyValueFactory<>("mnozstvo"));
         TableColumn<IngredienciaMnozstvo, String> colJedn = new TableColumn<>("Jednotka");
         colJedn.setCellValueFactory(new PropertyValueFactory<>("jednotka"));
-        this.tableDocasne.getColumns().addAll(colIng, colMnoz, colJedn);
+        TableColumn<IngredienciaMnozstvo, Double> colKcalDocasne = new TableColumn<>("Kalórie (kcal)");
+        colKcalDocasne.setCellValueFactory(new PropertyValueFactory<>("kalorie"));
+        colKcalDocasne.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : String.format("%.1f", item));
+            }
+        });
+        this.tableDocasne.getColumns().addAll(colIng, colMnoz, colJedn, colKcalDocasne);
         this.tableDocasne.setPrefHeight(250.0);
         this.tableDocasne.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         ingBox.getChildren().addAll(lblIng, this.cbIngrediencia, mnozstvoBox, btnPridatIng, this.tableDocasne);
@@ -430,6 +439,9 @@ public class ReceptyFXApp extends Application {
 
         TableColumn<Recept, Integer> colPorcie = new TableColumn<>("Porcie");
         colPorcie.setCellValueFactory(new PropertyValueFactory<>("pocetPorcii"));
+
+        TableColumn<IngredienciaMnozstvo, Double> colIngKcal = new TableColumn<>("Kcal");
+        colIngKcal.setCellValueFactory(new PropertyValueFactory<>("kalorie"));
 
         TableColumn<Recept, String> colKategoria = new TableColumn<>("Kategória");
         colKategoria.setCellValueFactory(new PropertyValueFactory<>("kategoriaNazov"));
@@ -560,12 +572,33 @@ public class ReceptyFXApp extends Application {
             alert("Chyba", "Vyplňte ingredienciu a množstvo");
             return;
         }
+
         try {
             double mnozstvo = Double.parseDouble(mnoz);
-            this.docasneIngrediencie.add(new IngredienciaMnozstvo(nazov, mnozstvo, jedn));
-            this.cbIngrediencia.getEditor().clear();
-            this.tfMnozstvo.clear();
-            this.tfJednotka.clear();
+
+            // Vytvoríme inštanciu triedy Ingrediencia, kde máš tú metódu
+            Ingrediencia ingServis = new Ingrediencia(0, "");
+
+            // Spustíme sieťovú požiadavku na pozadí
+            new Thread(() -> {
+                try {
+                    // Voláme tvoju metódu z triedy Ingrediencia
+                    double vypocitaneKcal = ingServis.getCaloriesFromInternet(nazov, mnozstvo);
+
+                    // Návrat do hlavného grafického vlákna JavaFX
+                    Platform.runLater(() -> {
+                        // Pridáme do tabuľky objekt aj s vypočítanými kalóriami
+                        this.docasneIngrediencie.add(new IngredienciaMnozstvo(nazov, mnozstvo, jedn, vypocitaneKcal));
+
+                        this.cbIngrediencia.getEditor().clear();
+                        this.tfMnozstvo.clear();
+                        this.tfJednotka.clear();
+                    });
+                } catch (Exception ex) {
+                    Platform.runLater(() -> alert("Chyba", "Nepodarilo sa získať kalórie."));
+                }
+            }).start();
+
         } catch (NumberFormatException ex) {
             alert("Chyba", "Množstvo musí byť číslo");
         }
@@ -606,7 +639,7 @@ public class ReceptyFXApp extends Application {
             }
             this.db.vymazIngrediencieReceptu(receptId);
             for (IngredienciaMnozstvo ing : this.docasneIngrediencie) {
-                this.db.pridajIngredienciuDoReceptu(receptId, ing.getNazovIngrediencie(), ing.getMnozstvo(), ing.getJednotka());
+                this.db.pridajIngredienciuDoReceptu(receptId, ing.getNazovIngrediencie(), ing.getMnozstvo(), ing.getJednotka(), ing.getKalorie());
             }
             nacitajRecepty();
             if (!novyRecept) {
