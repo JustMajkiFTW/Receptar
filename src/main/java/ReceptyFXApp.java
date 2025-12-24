@@ -68,10 +68,10 @@ public class ReceptyFXApp extends Application {
     public static String loggedInUser = "";
     private FilteredList<Recept> filteredRecepty;
     private SortedList<Recept> sortedRecepty;
-    private static final String FTP_SERVER = "ftp.cambalik.eu";
-    private static final int FTP_PORT = 21;
-    private static final String FTP_USER = "recepty.cambalik.eu";
-    private static final String FTP_PASSWORD = "ILoveHugs321";
+    private static final String FTP_SERVER = "";
+    private static final int FTP_PORT = ;
+    private static final String FTP_USER = "";
+    private static final String FTP_PASSWORD = "";
     private static final String FTP_BASE_DIR = "/public_html/ReceptyApp";
     private static final String PUBLIC_BASE_URL = "https://cambalik.eu/ReceptyApp";
 
