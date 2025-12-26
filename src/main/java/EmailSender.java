@@ -16,13 +16,13 @@ import java.util.Properties;
 public class EmailSender {
 
     /** Predvolená e-mailová adresa odosielateľa */
-    private static final String FROM_EMAIL = "recepty@cambalik.eu";
+    private static final String FROM_EMAIL = "";
 
     /** Prihlasovacie meno pre SMTP autentifikáciu */
-    private static final String USERNAME = "recepty@cambalik.eu";
+    private static final String USERNAME = "";
 
     /** Heslo pre SMTP autentifikáciu */
-    private static final String PASSWORD = "LyzMcP3ijDQcpWr";
+    private static final String PASSWORD = "";
 
     /** Adresa SMTP hostiteľa (určená automaticky) */
     private static final String HOST;
