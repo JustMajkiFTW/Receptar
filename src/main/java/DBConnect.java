@@ -18,10 +18,10 @@ public class DBConnect {
     private static final String URL = "jdbc:mysql://db.db048.endora.cz:3306/cambalik_eu?useSSL=false&serverTimezone=UTC";
 
     /** Prihlasovacie meno do databázy */
-    private static final String USER = "cambalik_eu";
+    private static final String USER = "";
 
     /** Heslo pre prístup k databáze */
-    private static final String PASS = "ILoveHugs321";
+    private static final String PASS = "";
 
     /** Aktuálna inštancia spojenia */
     private Connection conn;
