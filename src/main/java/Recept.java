@@ -12,8 +12,10 @@ public class Recept {
 
     private final IntegerProperty receptId = new SimpleIntegerProperty();
     private final StringProperty nazov = new SimpleStringProperty();
+    private String popis;  // ← NOVÉ POLE
     private final StringProperty postup = new SimpleStringProperty();
     private final IntegerProperty casPripravy = new SimpleIntegerProperty();
+    private int casVarenia;
     private final IntegerProperty pocetPorcii = new SimpleIntegerProperty();
     private StringProperty obrazokCesta = new SimpleStringProperty();
     private final IntegerProperty kategoriaId = new SimpleIntegerProperty();
@@ -34,12 +36,14 @@ public class Recept {
      * @param userId         ID používateľa, ktorý recept pridal
      * @param autor          Meno autora receptu
      */
-    public Recept(int receptId, String nazov, String postup, int casPripravy, int pocetPorcii,
+    public Recept(int receptId, String nazov, String popis, String postup, int casPripravy,int casVarenia, int pocetPorcii,
                   String cesta, int kategoriaId, String kategoriaNazov, int userId, String autor) {
         this.receptId.set(receptId);
         this.nazov.set(nazov);
+        this.popis = popis;
         this.postup.set(postup);
         this.casPripravy.set(casPripravy);
+        this.casVarenia = casVarenia;
         this.pocetPorcii.set(pocetPorcii);
         this.obrazokCesta.set(cesta);
         this.kategoriaId.set(kategoriaId);
@@ -65,8 +69,14 @@ public class Recept {
 
     public int getReceptId() { return this.receptId.get(); }
     public String getNazov() { return this.nazov.get(); }
+    public String getPopis() {
+        return popis;
+    }
     public String getPostup() { return this.postup.get(); }
     public int getCasPripravy() { return this.casPripravy.get(); }
+    public int getCasVarenia() {
+        return casVarenia;
+    }
     public int getPocetPorcii() { return this.pocetPorcii.get(); }
     public String getObrazokCesta() { return this.obrazokCesta.get(); }
     public int getKategoriaId() { return this.kategoriaId.get(); }
@@ -79,6 +89,12 @@ public class Recept {
      */
     public void setObrazokCesta(String obrazokCesta) {
         this.obrazokCesta.set(obrazokCesta);
+    }
+    public void setCasVarenia(int casVarenia) {
+        this.casVarenia = casVarenia;
+    }
+    public void setPopis(String popis) {
+        this.popis = popis;
     }
 
     /**

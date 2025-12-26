@@ -334,22 +334,25 @@ public class DBConnect {
      */
     public List<Recept> nacitajVsetkyRecepty() {
         List<Recept> list = new ArrayList<>();
-        String sql = "SELECT r.recept_id, r.nazov, r.postup, r.cas_pripravy, r.pocet_porcii, " +
-                "r.obrazok_cesta, COALESCE(r.kategoria_id, 0) AS kategoria_id, " +
-                "COALESCE(k.nazov, 'Bez kategórie') AS kat_nazov, " +
-                "r.user_id, COALESCE(u.username, 'Neznámy') AS autor " +
-                "FROM recepty r " +
-                "LEFT JOIN kategoria k ON r.kategoria_id = k.kategoria_id " +
-                "LEFT JOIN users u ON r.user_id = u.id " +
-                "ORDER BY r.nazov";
+        String sql = "SELECT r.recept_id, r.nazov,r.popis, r.postup, r.cas_pripravy, r.casVarenia, r.pocet_porcii, "
+                + "r.obrazok_cesta, COALESCE(r.kategoria_id, 0) AS kategoria_id, "
+                + "COALESCE(k.nazov, 'Bez kategórie') AS kat_nazov, "
+                + "r.user_id, COALESCE(u.username, 'Neznámy') AS autor "
+                + "FROM recepty r "
+                + "LEFT JOIN kategoria k ON r.kategoria_id = k.kategoria_id "
+                + "LEFT JOIN users u ON r.user_id = u.id "
+                + "ORDER BY r.nazov";
+
         try (Statement st = this.conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 list.add(new Recept(
                         rs.getInt("recept_id"),
                         rs.getString("nazov"),
+                        rs.getString("popis"),  // ← NOVÉ
                         rs.getString("postup"),
                         rs.getInt("cas_pripravy"),
+                        rs.getInt("casVarenia"),  // ← NOVÉ POLE
                         rs.getInt("pocet_porcii"),
                         rs.getString("obrazok_cesta"),
                         rs.getInt("kategoria_id"),
@@ -368,17 +371,25 @@ public class DBConnect {
      * Pridá nový recept do databázy.
      * @return ID novovytvoreného receptu alebo -1 pri chybe
      */
-    public int pridajRecept(String nazov, String postup, int cas, int porcie, int kategoriaId, int userId, String obrazokCesta) {
-        String sql = "INSERT INTO recepty (nazov, postup, cas_pripravy, pocet_porcii, kategoria_id, user_id, obrazok_cesta) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public int pridajRecept(String nazov,String popis, String postup, int casPripravy, int casVarenia,
+                            int porcie, int kategoriaId, int userId, String obrazokCesta) {
+        String sql = "INSERT INTO recepty (nazov, popis, postup, cas_pripravy, casVarenia, pocet_porcii, kategoria_id, user_id, obrazok_cesta) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (PreparedStatement ps = this.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, nazov);
-            ps.setString(2, postup);
-            ps.setInt(3, cas);
-            ps.setInt(4, porcie);
-            if (kategoriaId == 0) ps.setNull(5, java.sql.Types.INTEGER); else ps.setInt(5, kategoriaId);
-            ps.setInt(6, userId);
-            ps.setString(7, obrazokCesta);
+            ps.setString(2, popis);  // ← NOVÉ
+            ps.setString(3, postup);
+            ps.setInt(4, casPripravy);
+            ps.setInt(5, casVarenia);  // ← NOVÉ POLE
+            ps.setInt(6, porcie);
+            if (kategoriaId == 0) ps.setNull(6, java.sql.Types.INTEGER);
+            else ps.setInt(7, kategoriaId);
+            ps.setInt(8, userId);
+            ps.setString(9, obrazokCesta);
+
             ps.executeUpdate();
+
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -393,16 +404,23 @@ public class DBConnect {
     /**
      * Upraví existujúci recept.
      */
-    public void upravRecept(int id, String nazov, String postup, int cas, int porcie, String obrazokCesta, int kategoriaId) {
-        String sql = "UPDATE recepty SET nazov = ?, postup = ?, cas_pripravy = ?, pocet_porcii = ?, obrazok_cesta = ?, kategoria_id = ? WHERE recept_id = ?";
+    public void upravRecept(int id, String nazov,String popis, String postup, int casPripravy, int casVarenia,
+                            int porcie, String obrazokCesta, int kategoriaId) {
+        String sql = "UPDATE recepty SET nazov = ?, popis = ?, postup = ?, cas_pripravy = ?, casVarenia = ?, "
+                + "pocet_porcii = ?, obrazok_cesta = ?, kategoria_id = ? WHERE recept_id = ?";
+
         try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
             ps.setString(1, nazov);
-            ps.setString(2, postup);
-            ps.setInt(3, cas);
-            ps.setInt(4, porcie);
-            ps.setString(5, obrazokCesta);
-            if (kategoriaId == 0) ps.setNull(6, java.sql.Types.INTEGER); else ps.setInt(6, kategoriaId);
-            ps.setInt(7, id);
+            ps.setString(2, popis);  // ← NOVÉ
+            ps.setString(3, postup);
+            ps.setInt(4, casPripravy);
+            ps.setInt(5, casVarenia);  // ← NOVÉ POLE
+            ps.setInt(6, porcie);
+            ps.setString(7, obrazokCesta);
+            if (kategoriaId == 0) ps.setNull(7, java.sql.Types.INTEGER);
+            else ps.setInt(8, kategoriaId);
+            ps.setInt(9, id);
+
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -508,5 +526,19 @@ public class DBConnect {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    public double zistiKaloriePreIngredienciu(String nazov) {
+        String sql = "SELECT kalorie FROM ingrediencie WHERE nazov = ?";
+        try (PreparedStatement ps = this.conn.prepareStatement(sql)) {
+            ps.setString(1, nazov);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("kalorie");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0; // Ak sa nenájde, vráti 0
     }
 }

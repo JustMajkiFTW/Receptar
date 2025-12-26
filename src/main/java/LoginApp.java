@@ -24,6 +24,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class LoginApp extends Application {
     private final DBConnect db = new DBConnect();
     private Scene homeScene;
+    private Boolean manualDarkMode = null; // null = nebolo manuálne zmenené, true = tmavá, false = svetlá
 
     private Button createModernButton(String text, String baseColor) {
         Button btn = new Button(text);
@@ -59,27 +60,103 @@ public class LoginApp extends Application {
     }
 
     public void start(Stage stage) {
+        // Hlavný kontajner pre obsah
         VBox root = new VBox(20.0);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(30.0));
-        root.setStyle("-fx-background-color: #f0f4f8;");
+        root.getStyleClass().add("login-root"); // Použijeme štýl z CSS namiesto setStyle
+
         Label title = new Label("Vitajte v Receptári");
-        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("login-title");
+
         Button btnRegister = this.createModernButton("Registrovať sa", "#27ae60");
-        btnRegister.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 12 30; -fx-background-radius: 10;");
-        btnRegister.setOnAction((e) -> {
-            this.showRegister(stage);
-        });
+        btnRegister.setOnAction((e) -> this.showRegister(stage));
+
         Button btnLogin = this.createModernButton("Prihlásiť sa", "#3498db");
-        btnLogin.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 12 30; -fx-background-radius: 10;");
-        btnLogin.setOnAction((e) -> {
-            this.showLogin(stage);
+        btnLogin.setOnAction((e) -> this.showLogin(stage));
+
+        root.getChildren().addAll(title, btnRegister, btnLogin);
+
+        // --- MANUÁLNY PREPÍNAČ ---
+        Button btnTheme = new Button("🌙"); // Ikona pre začiatok
+        btnTheme.setCursor(Cursor.HAND);
+        btnTheme.getStyleClass().add("theme-toggle-btn");
+        btnTheme.setStyle("-fx-background-radius: 50; -fx-min-width: 40; -fx-min-height: 40;");
+
+        btnTheme.setOnAction(e -> {
+            // Zistíme aktuálny stav zo scény
+            boolean isCurrentlyDark = stage.getScene().getRoot().getStyleClass().contains("dark-mode");
+
+            // Prepnutie stavu
+            manualDarkMode = !isCurrentlyDark;
+
+            // Okamžitá aplikácia na aktuálnu scénu
+            if (manualDarkMode) {
+                stage.getScene().getRoot().getStyleClass().add("dark-mode");
+                btnTheme.setText("☀️");
+            } else {
+                stage.getScene().getRoot().getStyleClass().remove("dark-mode");
+                btnTheme.setText("🌙");
+            }
         });
-        root.getChildren().addAll(new Node[]{title, btnRegister, btnLogin});
-        this.homeScene = new Scene(root, 450.0, 350.0);
+
+        // StackPane nám dovolí dať tlačidlo do rohu
+        StackPane stackPane = new StackPane(root, btnTheme);
+        StackPane.setAlignment(btnTheme, Pos.TOP_RIGHT);
+        StackPane.setMargin(btnTheme, new Insets(15));
+
+        this.homeScene = new Scene(stackPane, 450.0, 350.0);
+        applyTheme(this.homeScene);
+        // Ak applyTheme pridala dark-mode, zmeníme ikonu na slnko hneď pri štarte
+        if (stackPane.getStyleClass().contains("dark-mode")) {
+            btnTheme.setText("☀️");
+        }
+
         stage.setTitle("Prihlásenie do Receptára");
         stage.setScene(this.homeScene);
         stage.show();
+    }
+
+    // Nová pomocná metóda na detekciu a aplikáciu témy
+    private void applyTheme(Scene scene) {
+        String css = getClass().getResource("/styles.css").toExternalForm();
+        if (!scene.getStylesheets().contains(css)) {
+            scene.getStylesheets().add(css);
+        }
+
+        boolean shouldBeDark;
+
+        if (manualDarkMode != null) {
+            // Ak už používateľ manuálne prepol tému, použijeme jeho voľbu
+            shouldBeDark = manualDarkMode;
+        } else {
+            // Ak ešte nič neprepol, zistíme to z Windowsu
+            shouldBeDark = detectWindowsDarkMode();
+        }
+
+        if (shouldBeDark) {
+            scene.getRoot().getStyleClass().add("dark-mode");
+        } else {
+            scene.getRoot().getStyleClass().remove("dark-mode");
+        }
+    }
+
+    // Pomocná metóda pre čistotu kódu
+    private boolean detectWindowsDarkMode() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            try {
+                Process process = Runtime.getRuntime().exec("reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v AppsUseLightTheme");
+                java.util.Scanner sc = new java.util.Scanner(process.getInputStream());
+                while (sc.hasNextLine()) {
+                    String line = sc.nextLine();
+                    if (line.contains("AppsUseLightTheme") && line.contains("0x0")) {
+                        return true;
+                    }
+                }
+            } catch (Exception e) { return false; }
+        }
+        return false;
     }
 
     static StackPane createPasswordToggle(String promptText) {
@@ -117,21 +194,22 @@ public class LoginApp extends Application {
     private void showLogin(Stage stage) {
         VBox box = new VBox(15.0);
         box.setPadding(new Insets(30.0));
+        box.getStyleClass().add("vbox-container"); // Pridaj toto
         box.setAlignment(Pos.CENTER);
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
-
         Label lbl = new Label("Prihlásenie");
         lbl.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
         // Zmenil som txtUser na txtEmail, pretože v DBConnect hľadáš podľa emailu
         TextField txtUser = new TextField();
         txtUser.setPromptText("Používateľské meno"); // Pôvodný text
+        txtUser.getStyleClass().add("modern-input"); // Pridaná trieda
         txtUser.setStyle("-fx-background-radius: 25; -fx-padding: 12; -fx-font-size: 14px;");
         txtUser.setMaxWidth(300.0);
 
         StackPane passwordContainer = createPasswordToggle("Heslo");
         // Oprava: getStyle() vracal polomery a padding, ale nie maxWidth
         passwordContainer.setMaxWidth(300.0);
+        passwordContainer.getStyleClass().add("modern-input");
 
         PasswordField txtPass = (PasswordField)passwordContainer.getChildren().stream()
                 .filter(node -> node instanceof PasswordField)
@@ -179,6 +257,7 @@ public class LoginApp extends Application {
         box.getChildren().addAll(lbl, txtUser, passwordContainer, lblZabudnute, btnSubmit, btnBack);
 
         Scene scene = new Scene(box, 450.0, 400.0);
+        applyTheme(scene);
         stage.setScene(scene);
     }
 //    private void showLogin(Stage stage) {
@@ -237,10 +316,10 @@ public class LoginApp extends Application {
         VBox box = new VBox(20.0);
         box.setPadding(new Insets(40.0));
         box.setAlignment(Pos.CENTER);
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 20, 0.3, 0, 10);");
+        box.getStyleClass().add("vbox-container");
         box.setMaxWidth(400.0);
         Label lbl = new Label("Obnova hesla");
-        lbl.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lbl.getStyleClass().add("login-title");
         Label lblInfo = new Label("Zadaj svoj email a pošleme ti nové heslo.");
         lblInfo.setStyle("-fx-text-fill: #636e72; -fx-font-size: 14px;");
         lblInfo.setWrapText(true);
@@ -299,6 +378,7 @@ public class LoginApp extends Application {
         });
         box.getChildren().addAll(new Node[]{lbl, lblInfo, txtEmail, btnOdoslat, btnSpat, lblStatus});
         Scene scene = new Scene(box, 480.0, 550.0);
+        applyTheme(scene);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
@@ -320,7 +400,7 @@ public class LoginApp extends Application {
         VBox box = new VBox(15.0);
         box.setPadding(new Insets(30.0));
         box.setAlignment(Pos.CENTER);
-        box.setStyle("-fx-background-color: white; -fx-border-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 5);");
+        box.getStyleClass().add("vbox-container");
         Label lbl = new Label("Registrácia");
         lbl.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         TextField txtUser = new TextField();
@@ -373,6 +453,7 @@ public class LoginApp extends Application {
         });
         box.getChildren().addAll(new Node[]{lbl, txtUser, txtEmail, passwordContainer, btnSubmit, btnBack});
         Scene scene = new Scene(box, 450.0, 400.0);
+        applyTheme(scene);
         stage.setScene(scene);
     }
 

@@ -1,44 +1,40 @@
-/* Globálne farby pre celú aplikáciu */
+/* ======================================================== */
+/* UPRAVENÁ VERZIA STYLES.CSS PRE RECEPTY APP                */
+/* ======================================================== */
+
+/* ZÁKLADNÉ PREMENNÉ – SVETLÝ REŽIM */
 .root {
-    /* Svetlé hodnoty ako základ */
     -fx-base: #f4f6f9;
     -fx-control-inner-background: white;
     -fx-text-base-color: #2c3e50;
     -fx-accent: #3498db;
 }
 
-/* Keď je zapnutý tmavý režim cez AtlantaFX, prepíšeme tie premenné */
+/* TMAVÝ REŽIM – Zjednotenie s tmavomodrým/sivým pozadím */
 .dark-mode {
-    -fx-base: #1c1c1c;
-    -fx-control-inner-background: #2d2d2d;
-    -fx-text-base-color: white;
+    -fx-base: #1e1e1e; /* Hlavné pozadie okna */
+    -fx-control-inner-background: #2d2d2d; /* Farba kariet a panelov */
+    -fx-text-base-color: #ffffff;
     -fx-accent: #2196f3;
 }
 
-/* Štýl pre tvoje tri hlavné panely */
+/* KARTY (panely v hlavnom okne aj dialógoch) */
 .card {
     -fx-background-color: -fx-control-inner-background;
-    -fx-background-radius: 15;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);
 }
 
-/* Horná lišta */
+/* HORNÁ LIŠTA */
 .top-bar-custom {
     -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: derive(-fx-base, -10%);
-    -fx-border-width: 0 0 2 0;
+    -fx-border-color: derive(-fx-base, -15%);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 14 25 14 25;
 }
 
-/* Text prihláseného používateľa */
-.user-label {
-    -fx-text-fill: -fx-text-base-color;
-}
-
-/* ========================================================== */
-/* OPRAVENÁ TABUĽKA (TableView)                               */
-/* ========================================================== */
-
+/* TABUĽKY */
 .table-view {
-    /* POUŽÍVAME PREMENNÚ NAMIESTO WHITE */
     -fx-background-color: -fx-control-inner-background;
     -fx-background-radius: 12;
     -fx-border-radius: 12;
@@ -46,7 +42,6 @@
     -fx-border-width: 1;
 }
 
-/* Pozadie hlavičky stĺpcov - gradient môžeme nechať, ten vyzerá dobre v oboch */
 .table-view .column-header-background {
     -fx-background-color: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
     -fx-background-radius: 12 12 0 0;
@@ -55,102 +50,157 @@
 .table-view .column-header .label {
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 11px;
     -fx-padding: 12;
 }
 
-.table-row-cell {
-    /* RIADOK DEDÍ FARBU POZADIA TABUĽKY */
-    -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: transparent transparent derive(-fx-base, -5%) transparent;
+/* TEXTY RECEPTU */
+.recipe-popis-label {
+    -fx-text-fill: #34495e;
+    -fx-font-style: italic;
+    -fx-padding: 0 0 15 0;
 }
 
-/* ZEBRA PRUHY - Použijeme mierne odlišný odtieň základnej farby */
-.table-row-cell:odd {
-    -fx-background-color: derive(-fx-control-inner-background, -2%);
+.dark-mode .recipe-popis-label {
+    -fx-text-fill: #cccccc;
 }
 
-/* HOVER EFEKT - Prispôsobený tak, aby fungoval v tme aj svetle */
-.table-row-cell:hover {
-    -fx-background-color: derive(-fx-control-inner-background, -10%);
+/* TLAČIDLÁ */
+.button {
+    -fx-background-radius: 30;
+    -fx-cursor: hand;
 }
 
-/* VYBRANÝ RIADOK */
-.table-row-cell:selected {
-    -fx-background-color: -fx-accent; /* Použije systémovú modrú z AtlantaFX */
+/* DIALÓGY A SPLITPANE – OPRAVA TMAVÉHO POZADIA */
+.dialog-pane {
+    -fx-background-color: -fx-base;
 }
 
-.table-row-cell:selected .text {
-    -fx-fill: white;
+.dark-mode .split-pane,
+.dark-mode .scroll-pane {
+    -fx-background-color: #1e1e1e;
+    -fx-background: #1e1e1e; /* Dôležité pre ScrollPane */
+}
+
+/* Vstupné polia v tmavom režime */
+.dark-mode .text-field,
+.dark-mode .text-area,
+.dark-mode .combo-box-base {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #aaaaaa;
+}
+
+/* LISTVIEW POSTUPU - ZABRÁNENIE BODKÁM (...) */
+.postup-list {
+    -fx-background-color: transparent;
+}
+
+.postup-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-overrun: clip; /* Zabráni vytváraniu troch bodiek */
+    -fx-wrap-text: true;
+}
+
+.postup-list .label {
+    -fx-text-fill: -fx-text-base-color;
+    -fx-wrap-text: true; /* Vynúti zalamovanie v labeli */
+}
+
+.dark-mode .postup-list .label {
+    -fx-text-fill: white;
+}
+
+/* CHECKBOX V POSTUPE */
+.postup-list .check-box .box {
+    -fx-background-color: transparent;
+    -fx-border-color: #666666;
+    -fx-border-radius: 3;
+}
+
+.dark-mode .postup-list .check-box .box {
+    -fx-border-color: #aaaaaa;
+}
+
+/* Oprava modrého textu v ľavom paneli pre tmavý režim */
+.dark-mode .recipe-title-label {
+    -fx-text-fill: #ffffff !important; /* Biela pre nadpis "Recept:" */
+}
+
+.dark-mode .recipe-name-label {
+    -fx-text-fill: #3498db !important; /* Svetlejšia modrá, ktorá je čitateľná na tmavom */
+    /* Alebo ak chcete úplne bielu: -fx-text-fill: white !important; */
+}
+
+/* Ak je modrý aj text "Ingrediencie:", pridajte toto: */
+.dark-mode .card > .label {
+    -fx-text-fill: white !important;
+}
+
+/* Pridaj toto na začiatok alebo koniec styles.css */
+
+/* Automatické pozadie pre celú plochu LoginApp */
+.dark-mode.root {
+    -fx-background-color: #1e1e1e;
+}
+
+/* Úprava VBoxu, ktorý slúži ako kontajner v LoginApp */
+.dark-mode .vbox-container { /* V Jave pridáme túto triedu */
+    -fx-background-color: #2d2d2d;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 15, 0, 0, 8);
+}
+
+/* Oprava farieb textov v LoginApp */
+.dark-mode .label {
+    -fx-text-fill: white;
+}
+/* LOGIN APP ŠPECIFICKÉ */
+.login-root {
+    -fx-background-color: -fx-base; /* Automaticky použije #f4f6f9 (light) alebo #1e1e1e (dark) */
+}
+
+.login-title {
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
-}
-
-/* Toto zaistí, že trieda .card a .table-view budú reagovať na zmenu témy */
-.card, .table-view {
-    -fx-background-color: -fx-control-inner-background;
-}
-
-/* Toto opraví texty v tabuľke, aby boli biele v tme */
-.table-row-cell {
     -fx-text-fill: -fx-text-base-color;
 }
 
-/* Tvoj vlastný switch */
-.my-switch {
-    -fx-background-color: #d1d1d1;
-    -fx-background-radius: 20;
-    -fx-min-width: 50;
-    -fx-min-height: 24;
-    -fx-max-height: 24;
-    -fx-padding: 0;
-    -fx-text-fill: transparent; /* Skryje text vnútri */
+.vbox-container {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);
 }
 
-/* Gulička vo vnútri */
-.my-switch .graphic {
-    -fx-background-color: white;
-    -fx-background-radius: 50%;
-    -fx-min-width: 20;
-    -fx-min-height: 20;
-    -fx-translate-x: -12; /* Pozícia vľavo */
+.login-header {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-base-color;
 }
 
-/* Stav keď je zapnutý */
-.my-switch:selected {
-    -fx-background-color: #6c5ce7;
+.modern-input {
+    -fx-background-radius: 25;
+    -fx-padding: 5; /* Znížené, lebo textfield má vlastný padding */
 }
 
-.my-switch:selected .graphic {
-    -fx-translate-x: 12; /* Pozícia vpravo */
+/* Oprava pre textové polia v LoginApp v Dark Mode */
+.dark-mode .text-field,
+.dark-mode .password-field {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #aaaaaa;
+    -fx-background-radius: 25;
 }
 
-.button {
-    -fx-font-size: 13px; /* Zväčší text aj emoji ikonky v tlačidlách */
+/* Štýl pre prepínač v LoginApp */
+.theme-toggle-btn {
+    -fx-background-color: derive(-fx-base, -5%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-border-color: derive(-fx-base, -15%);
+    -fx-border-width: 1;
 }
 
-/* Pridaj toto do styles.css */
-.theme-switcher {
-    -fx-font-size: 14px;
-    -fx-min-width: 45px;
-    -fx-min-height: 45px;
-    -fx-background-radius: 50%; /* Urobí z tlačidla dokonalý kruh */
-    -fx-border-color: derive(-fx-base, -10%);
-    -fx-border-width: 1px;
-    -fx-transition: all 0.3s ease-in-out; /* Ak tvoja verzia JavaFX podporuje animácie */
+.dark-mode .theme-toggle-btn {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: white;
+    -fx-border-color: #555555;
 }
-
-.theme-switcher:hover {
-    -fx-scale-x: 1.1;
-    -fx-scale-y: 1.1;
-}
-
-/* Predvolený separator pre svetlý režim */
-.my-separator {
-    -fx-background-color: #bdc3c7; /* Pekná sivá pre svetlý režim */
-    -fx-max-height: 1px;
-}
-
-/* Separator pre tmavý režim */
-.dark-mode .my-separator {
-    -fx-background-color: derive(-fx-accent, -50%);}
-
